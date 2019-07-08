@@ -413,6 +413,7 @@ openpose_ros_msgs::Persons processImgForPoseDetection(cv_bridge::CvImagePtr &cv_
         }
         persons.persons.push_back(person);
     }
+    publish_pose.publish(persons);
 
 
     // publish result image with annotation.

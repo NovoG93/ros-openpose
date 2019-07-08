@@ -23,12 +23,9 @@ See : https://github.com/ildoonet/tf-openpose
 ### Openpose
 
 See [Openpose](https://github.com/CMU-Perceptual-Computing-Lab/openpose).
+Tested with OpenPose 1.5.0
 
-After building openpose, set the environment variable OPENPOSE_HOME.
-
-```
-$ export OPENPOSE_HOME='{path/to/your/openpose/home}'
-```
+``
 
 ### Packages
 
@@ -40,9 +37,9 @@ $ sudo apt-get install ros-indigo-image-common ros-indigo-vision-opencv ros-indi
 
 ```
 $ cd src
-$ git clone https://github.com/ildoonet/ros-openpose
+$ git clone https://github.com/NovoG93/ros-openpose
 $ cd ..
-$ catkin_make
+$ catkin build
 ```
 
 ## Message
