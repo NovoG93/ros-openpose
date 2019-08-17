@@ -1,0 +1,30 @@
+<launch>
+    <arg name="debugging"  default="false"/>
+
+    <rosparam command="load" file="$(find openpose_ros_node)/config/config.yaml"/>
+
+    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
+        <param name="video_device" value="/dev/video0" />
+        <param name="image_width" value="640" />
+        <param name="image_height" value="480" />
+        <param name="pixel_format" value="yuyv" />
+        <param name="camera_frame_id" value="usb_cam" />
+        <param name="io_method" value="mmap"/>
+    </node>
+
+
+
+    <group if="$(arg debugging)">
+        <node name="openpose_node" pkg="openpose_ros_node" type="openpose_node" output="screen"
+        launch-prefix="xterm -hold -e gdbgui --project $(find openpose_ros_node)/src --args" />
+    </group>
+    <group unless="$(arg debugging)">
+        <node name="openpose_node" pkg="openpose_ros_node" type="openpose_node" output="screen"
+        launch-prefix="xterm -e" >
+        <remap from="input_stream" to="/usb_cam/image_raw"/>
+        <remap from="output_stream" to="output_image"/>
+        </node>
+    </group>
+
+    <node name="image_view" pkg="rqt_image_view" type="rqt_image_view" args="/openpose_node/result_image"/>
+</launch>
