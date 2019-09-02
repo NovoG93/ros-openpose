@@ -17,6 +17,8 @@ add_message_files(
   BodyPartDetection.msg
   PersonDetection.msg
   Persons.msg
+  BoundingBox.msg
+  BoundingBoxes.msg
 )
 
 generate_messages(
