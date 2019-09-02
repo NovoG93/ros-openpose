@@ -13,6 +13,8 @@
 #include <openpose_ros_msgs/BodyPartDetection.h>
 #include <openpose_ros_msgs/PersonDetection.h>
 #include "openpose_ros_srvs/DetectPeoplePoseFromImg.h"
+#include <openpose_ros_msgs/BoundingBoxes.h>
+#include <openpose_ros_msgs/BoundingBox.h>
 
 // C++ //
 #include "iostream"
@@ -37,10 +39,11 @@ class openpose_node{
         image_transport::ImageTransport img_t;
         image_transport::Subscriber sub;
         image_transport::Publisher publish_result;
-        ros::Publisher publish_pose;
+        ros::Publisher publish_pose, publish_bbox;
         //ros::ServiceServer pose_srv;
 
         //---OpenPose Vars---//
+        std::vector<cv::Point> min_max_points;
         op::Point<int> outputSize, netInputSize, netOutputSize;
         op::PoseModel poseModel;
 

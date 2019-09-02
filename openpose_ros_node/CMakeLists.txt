@@ -34,13 +34,13 @@ catkin_package(
     openpose_ros_srvs
 )
 
-set(OPENPOSE_DIR "$ENV{OPENPOSE_HOME}")
+#set(OPENPOSE_DIR "$ENV{OPENPOSE_HOME}")
 
-if(OPENPOSE_DIR)               # <--- Use 'BOOST_DIR', not 'DEFINED ${BOOST_DIR}'
-    message(STATUS "OPENPOSE_HOME at ${OPENPOSE_DIR}")
-else()
-    message(FATAL_ERROR "Undefined OPENPOSE_HOME env var.")
-endif()
+#if(OPENPOSE_DIR)               # <--- Use 'BOOST_DIR', not 'DEFINED ${BOOST_DIR}'
+#    message(STATUS "OPENPOSE_HOME at ${OPENPOSE_DIR}")
+#else()
+#    message(FATAL_ERROR "Undefined OPENPOSE_HOME env var.")
+#endif()
 
 # include_directories(include)
 #include_directories(

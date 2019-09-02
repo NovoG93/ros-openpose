@@ -13,7 +13,7 @@ flag_net_resolution: "-1x368"    # Multiples of 16. If it is increased, the accu
 falg_face: false             # Enables face keypoint detection. It will share some parameters from the body pose, e.g. model folder
 flag_logging_level: 3        # Current OpenPose library messages are in the range 0-4: 1 for
                               # low priority messages and 4 for important ones, = will output any log message
-flag_model_folder: "/home/georg/git/Programms/openpose"  # Folder path (absolute or relative) where the models (pose, face, ...) are located
+flag_model_folder: "/home/novotnyg/git/Programs/openpose/"  # Folder path (absolute or relative) where the models (pose, face, ...) are located
 flag_render_thrash: 0.05            # Only estimated keypoints whose score confidences are higher than this threshold will be
                                 # rendered. Generally, a high threshold (> 0.5) will only render very clear body parts
                                 # while small thresholds (~0.1) will also output guessed and occluded keypoints, but also
@@ -29,7 +29,5 @@ scale_gap: 0.3               # Scale gap between scales. No effect unless num_sc
                                     # want to change the initial scale, you actually want to multiply the `net_resolution` by
                                     # your desired initial scale.
 no_display: false            # Do not open a display window (Do not publish output picture)
-from_image_topic: "/usb_cam/image_raw"    # Topic to subscribe
-to_image_topic: "/openpose/img"              # Publish topic
 show_skeleton: true           # Flag that decides wether to publish output image or not
 pub_bbox: true                # Flag that decides wether to publish the Bounding Box image
