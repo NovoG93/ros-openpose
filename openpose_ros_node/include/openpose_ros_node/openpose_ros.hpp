@@ -71,7 +71,7 @@ class openpose_node{
         int image_width, image_height;
 
 
-        void pub_bbox(openpose_ros_msgs::Persons persons, cv::Mat &outputImage);
+        void pub_bbox(openpose_ros_msgs::Persons persons, const cv::Mat &outputImage);
 
         void imageCallback(const sensor_msgs::ImageConstPtr& msg);
         //bool peoplePoseFromImg(openpose_ros_srvs::DetectPeoplePoseFromImg::Request  &req,

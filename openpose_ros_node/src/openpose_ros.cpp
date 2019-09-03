@@ -13,7 +13,7 @@ openpose_node::openpose_node(YAML::Node config):
         n.param<int>("image_height", image_height, 480);
         n.param<int>("flag_logging_level", logging_level, 3);
         n.param<std::string>("flag_net_resolution", flag_net_resolution, "-1x368" );
-        n.param<std::string>("flag_model_folder", flag_model_folder, "/home/georg/git/Programs/openpose");
+        n.param<std::string>("flag_model_folder", flag_model_folder, std::string(getenv("HOME")).append("/git/Programs/openpose"));
         n.param<std::string>("flag_model_pose", flag_model_pose, "COCO");
         n.param<float>("flag_render_thrash", flag_render_thrash, 0.05);
         n.param<bool>("flag_disable_blending", flag_disable_blending, false);
@@ -32,7 +32,7 @@ openpose_node::openpose_node(YAML::Node config):
     }
 
 
-void openpose_node::pub_bbox(openpose_ros_msgs::Persons persons, cv::Mat &outputImage)
+void openpose_node::pub_bbox(openpose_ros_msgs::Persons persons, const cv::Mat &outputImage)
 {
     const int num_persons = persons.persons.size();
     const int num_parts = persons.persons[num_persons-1].body_part.size();
@@ -147,7 +147,7 @@ openpose_ros_msgs::Persons openpose_node::processImg(cv_bridge::CvImagePtr &cv_p
         auto outputImage = OpOutputToCvMat->formatToCvMat(outputArray);
         if(show_bbox)
         {
-            auto t1 = std::thread(&openpose_node::pub_bbox, this, persons, std::ref(outputImage));
+            auto t1 = std::thread(&openpose_node::pub_bbox, this, persons, std::cref(outputImage));
             t1.detach();
         }
         ROS_WARN_STREAM("after");
@@ -158,7 +158,6 @@ openpose_ros_msgs::Persons openpose_node::processImg(cv_bridge::CvImagePtr &cv_p
     publish_pose.publish(persons);
     return persons;
 }
-
 
 int openpose_node::init_openpose()
 {
