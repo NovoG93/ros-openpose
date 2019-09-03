@@ -8,7 +8,7 @@ openpose_node::openpose_node(YAML::Node config):
     img_t(n)
     {
         n.param<bool>("show_skeleton", show_skeleton, true);
-        n.param<bool>("show_bbox", show_bbox, false);
+        n.param<bool>("show_bbox", show_bbox, true);
         n.param<int>("image_width", image_width, 640);
         n.param<int>("image_height", image_height, 480);
         n.param<int>("flag_logging_level", logging_level, 3);
@@ -32,11 +32,10 @@ openpose_node::openpose_node(YAML::Node config):
     }
 
 
-void openpose_node::pub_bbox(openpose_ros_msgs::Persons persons)
+void openpose_node::pub_bbox(openpose_ros_msgs::Persons persons, cv::Mat &outputImage)
 {
     const int num_persons = persons.persons.size();
     const int num_parts = persons.persons[num_persons-1].body_part.size();
-    std::vector<cv::Point> min_max_points_tmp;
     openpose_ros_msgs::BoundingBoxes bboxes;
     openpose_ros_msgs::BoundingBox box;
     ROS_INFO_STREAM("Detected "<<num_persons << " person(s)");
@@ -59,13 +58,13 @@ void openpose_node::pub_bbox(openpose_ros_msgs::Persons persons)
         ROS_DEBUG_STREAM("Min/max values of Person ("<< i << ") Min_y: " << result_y.first->y << " Max_y: " << result_y.second->y << std::endl);
         const cv::Point2d min_(result_x.first->x, result_y.first->y);
         const cv::Point2d max_(result_x.second->x, result_y.second->y);
-        min_max_points_tmp.push_back(min_);
-        min_max_points_tmp.push_back(max_);
+        cv::rectangle(outputImage, min_, max_, CV_RGB(255,0,0), 2);
+
         box.min_x = min_.x;
         box.min_y = min_.y;
         box.max_x = max_.x;
         box.max_y = max_.y;
-
+        
         bboxes.BoundingBoxes.push_back(box);
     }
     publish_bbox.publish(bboxes);
@@ -73,7 +72,6 @@ void openpose_node::pub_bbox(openpose_ros_msgs::Persons persons)
     const auto totalTimeSec = (double)std::chrono::duration_cast<std::chrono::nanoseconds>(now-timerBegin).count() * 1e-9;
     const auto message = "Total time for bounding box calculation: " + std::to_string(totalTimeSec) + " seconds.";
     ROS_DEBUG_STREAM(message);
-    min_max_points = min_max_points_tmp;
 }
 
 void openpose_node::imageCallback(const sensor_msgs::ImageConstPtr& msg)
@@ -143,18 +141,17 @@ openpose_ros_msgs::Persons openpose_node::processImg(cv_bridge::CvImagePtr &cv_p
     */
     if(show_skeleton)
     {
+        ROS_WARN_STREAM("Count= " <<cnt);
         poseRenderer->renderPose(outputArray, poseKeypoints, scaleInputToOutput);
         // Openpose Outputarray to OpenCV Image
         auto outputImage = OpOutputToCvMat->formatToCvMat(outputArray);
         if(show_bbox)
         {
-            std::thread t1(&openpose_node::pub_bbox, this, persons);
-            t1.join();
-            for (int i = 0; i < persons.persons.size(); i = i+2)
-            {
-                cv::rectangle(outputImage, min_max_points[i], min_max_points[i+1], CV_RGB(255,0,0), 2);
-            }
+            auto t1 = std::thread(&openpose_node::pub_bbox, this, persons, std::ref(outputImage));
+            t1.detach();
         }
+        ROS_WARN_STREAM("after");
+        cnt++;
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", outputImage).toImageMsg();
         publish_result.publish(msg);
     }

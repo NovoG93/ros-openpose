@@ -43,7 +43,6 @@ class openpose_node{
         //ros::ServiceServer pose_srv;
 
         //---OpenPose Vars---//
-        std::vector<cv::Point> min_max_points;
         op::Point<int> outputSize, netInputSize, netOutputSize;
         op::PoseModel poseModel;
 
@@ -58,6 +57,7 @@ class openpose_node{
             std::unique_ptr<op::PoseCpuRenderer> poseRenderer; //ToDo: Change to GPU
 
 
+        int cnt = 0;
         // Flags 
         bool init_finished, show_skeleton, show_bbox;
         int logging_level, num_gpu_start, scale_number;
@@ -71,7 +71,7 @@ class openpose_node{
         int image_width, image_height;
 
 
-        void pub_bbox(openpose_ros_msgs::Persons persons);
+        void pub_bbox(openpose_ros_msgs::Persons persons, cv::Mat &outputImage);
 
         void imageCallback(const sensor_msgs::ImageConstPtr& msg);
         //bool peoplePoseFromImg(openpose_ros_srvs::DetectPeoplePoseFromImg::Request  &req,
