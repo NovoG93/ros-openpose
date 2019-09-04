@@ -32,41 +32,41 @@ openpose_node::openpose_node(YAML::Node config):
     }
 
 
-void openpose_node::pub_bbox(openpose_ros_msgs::Persons persons, const cv::Mat &outputImage)
+void openpose_node::pub_bbox(const openpose_ros_msgs::Persons persons, cv::Mat &outputImage)
 {
     const int num_persons = persons.persons.size();
-    const int num_parts = persons.persons[num_persons-1].body_part.size();
+    const int num_parts = persons.persons.back().body_part.size();
     openpose_ros_msgs::BoundingBoxes bboxes;
     openpose_ros_msgs::BoundingBox box;
-    ROS_INFO_STREAM("Detected "<<num_persons << " person(s)");
+    ROS_INFO_STREAM_THROTTLE(1, "Detected "<<num_persons << " person(s)");
     // get min/ max of persons.persons[].body_part[].x / y
     const auto timerBegin = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < persons.persons.size(); i++){
-        auto result_x = std::minmax_element(persons.persons[i].body_part.begin(), persons.persons[i].body_part.end(),
-        [](const openpose_ros_msgs::BodyPartDetection &first, const openpose_ros_msgs::BodyPartDetection &second)
-        {
-            if (first.x !=0 ) return first.x < second.x; 
-            else return false;
-        });
-        auto result_y = std::minmax_element(persons.persons[i].body_part.begin(), persons.persons[i].body_part.end(),
-        [](const openpose_ros_msgs::BodyPartDetection &first, const openpose_ros_msgs::BodyPartDetection &second)
-        {
-            if (first.x !=0 ) return first.y < second.y; 
-            else return false;
-        });
-        ROS_DEBUG_STREAM("Min/max values of Person ("<< i << ") Min_x: " << result_x.first->x << " Max_x: " << result_x.second->x << std::endl);
-        ROS_DEBUG_STREAM("Min/max values of Person ("<< i << ") Min_y: " << result_y.first->y << " Max_y: " << result_y.second->y << std::endl);
-        const cv::Point2d min_(result_x.first->x, result_y.first->y);
-        const cv::Point2d max_(result_x.second->x, result_y.second->y);
-        cv::rectangle(outputImage, min_, max_, CV_RGB(255,0,0), 2);
+    int i = 0;
+    for (const auto& person:persons.persons){
+        std::vector<int> x_vals, y_vals;
+        for (const auto& body_part:person.body_part){
+            if (body_part.x != 0) x_vals.push_back(body_part.x);
+            if (body_part.y != 0) y_vals.push_back(body_part.y);
+        }
+        auto result_x = std::minmax_element(x_vals.begin(), x_vals.end(), 
+            [](const int &first, const int &second){return first < second;});
+        auto result_y = std::minmax_element(y_vals.begin(), y_vals.end(), 
+            [](const int &first, const int &second){return first < second;});
+
+        ROS_DEBUG_STREAM("Min/max values of Person ("<< i << ") Min_x: " << *result_x.first << " Max_x: " << *result_x.second << std::endl);
+        ROS_DEBUG_STREAM("Min/max values of Person ("<< i << ") Min_y: " << *result_y.first << " Max_y: " << *result_y.second << std::endl);
+        const cv::Point2i min_(*result_x.first-10, *result_y.first-10);
+        const cv::Point2i max_(*result_x.second+10, *result_y.second+10);
+        cv::rectangle(outputImage, min_, max_, CV_RGB(255,0,0), 8);
 
         box.min_x = min_.x;
         box.min_y = min_.y;
         box.max_x = max_.x;
         box.max_y = max_.y;
-        
         bboxes.BoundingBoxes.push_back(box);
+        i++;
     }
+    bboxes.header.stamp = ros::Time::now();
     publish_bbox.publish(bboxes);
     const auto now = std::chrono::high_resolution_clock::now();
     const auto totalTimeSec = (double)std::chrono::duration_cast<std::chrono::nanoseconds>(now-timerBegin).count() * 1e-9;
@@ -96,9 +96,7 @@ openpose_ros_msgs::Persons openpose_node::processImg(cv_bridge::CvImagePtr &cv_p
 {
     // Init //
     openpose_ros_msgs::Persons persons;
-
-    std::vector<float> scaleRations;
-    
+    std::vector<float> scaleRations; 
     // Process
     const op::Point<int> imageSize{cv_ptr->image.cols, cv_ptr->image.rows};
     std::vector<double> scaleInputToNetInputs;
@@ -137,23 +135,24 @@ openpose_ros_msgs::Persons openpose_node::processImg(cv_bridge::CvImagePtr &cv_p
     }
 
     /*!
-    Publish image stream with overlayed openpose skeleton
+    Publish image stream with overlayed openpose skeleton / Bbox
     */
-    if(show_skeleton)
-    {
-        ROS_WARN_STREAM("Count= " <<cnt);
-        poseRenderer->renderPose(outputArray, poseKeypoints, scaleInputToOutput);
-        // Openpose Outputarray to OpenCV Image
-        auto outputImage = OpOutputToCvMat->formatToCvMat(outputArray);
-        if(show_bbox)
+    if(!persons.persons.empty()){
+        if(show_skeleton)
         {
-            auto t1 = std::thread(&openpose_node::pub_bbox, this, persons, std::cref(outputImage));
-            t1.detach();
+            poseRenderer->renderPose(outputArray, poseKeypoints, scaleInputToOutput);
+            // Openpose Outputarray to OpenCV Image
+            auto outputImage = OpOutputToCvMat->formatToCvMat(outputArray);
+            if(show_bbox)
+            {
+                auto t1 = std::thread(&openpose_node::pub_bbox, this, persons, std::ref(outputImage));
+                t1.detach();
+            }
+            sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", outputImage).toImageMsg();
+            publish_result.publish(msg);
         }
-        ROS_WARN_STREAM("after");
-        cnt++;
-        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", outputImage).toImageMsg();
-        publish_result.publish(msg);
+    }else{
+        ROS_INFO_STREAM("No persons detected");
     }
     publish_pose.publish(persons);
     return persons;

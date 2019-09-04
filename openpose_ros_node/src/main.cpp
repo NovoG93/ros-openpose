@@ -23,5 +23,6 @@ int main(int argc, char **argv)
     {
         ros::spinOnce();
     }
+    std::cout<<"Done";
     return 0;
 }
