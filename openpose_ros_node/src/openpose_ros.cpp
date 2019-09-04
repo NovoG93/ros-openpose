@@ -5,8 +5,10 @@
 openpose_node::openpose_node(YAML::Node config):
     init_finished(false),
     n("~"),
-    img_t(n)
+    img_t(n),
+    f(boost::bind(&openpose_node::callback_reconf, this, _1, _2))
     {
+        server.setCallback(f);
         n.param<bool>("show_skeleton", show_skeleton, true);
         n.param<bool>("show_bbox", show_bbox, true);
         n.param<int>("image_width", image_width, 640);
@@ -25,12 +27,18 @@ openpose_node::openpose_node(YAML::Node config):
 
         sub = img_t.subscribe("/input_stream", 1, &openpose_node::imageCallback, this);
         publish_result = img_t.advertise("output_stream", 1);
-        publish_pose = n.advertise<openpose_ros_msgs::Persons>("/openpose/pose2d",1);
-        publish_bbox = n.advertise<openpose_ros_msgs::BoundingBoxes>("/openpose/bboxes", 1);
+        publish_pose = n.advertise<openpose_ros_msgs::Persons>("pose2d",1);
+        publish_bbox = n.advertise<openpose_ros_msgs::BoundingBoxes>("bboxes", 1);
         
         ROS_INFO("Init %s node", ros::this_node::getName().c_str());
     }
 
+void openpose_node::callback_reconf(openpose_ros_node_cfg::openpose_rosConfig  &config, uint32_t)
+{
+    show_skeleton = config.show_skeleton;
+    show_bbox = config.show_bbox;
+    ROS_WARN_STREAM("Dynreconf\n\n\n");
+}
 
 void openpose_node::pub_bbox(const openpose_ros_msgs::Persons persons, cv::Mat &outputImage)
 {
@@ -146,7 +154,7 @@ openpose_ros_msgs::Persons openpose_node::processImg(cv_bridge::CvImagePtr &cv_p
             if(show_bbox)
             {
                 auto t1 = std::thread(&openpose_node::pub_bbox, this, persons, std::ref(outputImage));
-                t1.detach();
+                t1.join();
             }
             sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", outputImage).toImageMsg();
             publish_result.publish(msg);

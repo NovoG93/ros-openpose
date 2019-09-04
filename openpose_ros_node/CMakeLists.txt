@@ -16,6 +16,7 @@ add_definitions(-std=c++17)
 add_definitions(-DUSE_CAFFE)
 
 find_package(catkin REQUIRED COMPONENTS
+  dynamic_reconfigure
   roscpp
   rospy
   cv_bridge
@@ -28,29 +29,20 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(CUDA REQUIRED)
 find_package(gflags REQUIRED)
 
+## Generate the dynamic_reconfigure
+generate_dynamic_reconfigure_options(
+   cfg/config.cfg
+   #...
+)
+
+
 catkin_package(
   CATKIN_DEPENDS
     std_msgs
     openpose_ros_srvs
 )
 
-#set(OPENPOSE_DIR "$ENV{OPENPOSE_HOME}")
 
-#if(OPENPOSE_DIR)               # <--- Use 'BOOST_DIR', not 'DEFINED ${BOOST_DIR}'
-#    message(STATUS "OPENPOSE_HOME at ${OPENPOSE_DIR}")
-#else()
-#    message(FATAL_ERROR "Undefined OPENPOSE_HOME env var.")
-#endif()
-
-# include_directories(include)
-#include_directories(
-#  ${PROJECT_SOURCE_DIR}/include
-#  ${CUDA_INCLUDE_DIRS}
-#  ${catkin_INCLUDE_DIRS}
-#  ${OPENPOSE_DIR}/include
-#  ${OPENPOSE_DIR}/3rdparty/caffe/include
-#  ${OPENPOSE_DIR}/3rdparty/caffe/.build_release/src
-#)
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
@@ -60,15 +52,6 @@ include_directories(
   
 )
 
-#add_executable(${PROJECT_NAME} src/openpose_ros_node.cpp)
-
-# Specify libraries to link a library or executable target against
-#target_link_libraries(${PROJECT_NAME}
-#  ${catkin_LIBRARIES}
-#  ${OPENPOSE_DIR}/build/src/openpose/libopenpose.so
-#  ${OPENPOSE_DIR}/build/caffe/lib/libcaffe.so
-#  gflags
-#)
 
 add_executable(openpose_node src/main.cpp src/openpose_ros.cpp)
 target_link_libraries(openpose_node ${catkin_LIBRARIES} ${OpenPose_LIBS} ${OpenCV_LIBS} yaml-cpp)

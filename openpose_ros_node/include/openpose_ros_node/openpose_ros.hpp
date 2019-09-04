@@ -16,6 +16,9 @@
 #include <openpose_ros_msgs/BoundingBoxes.h>
 #include <openpose_ros_msgs/BoundingBox.h>
 
+#include "openpose_ros_node/openpose_rosConfig.h"
+#include <dynamic_reconfigure/server.h>
+
 // C++ //
 #include "iostream"
 #include "yaml-cpp/yaml.h"
@@ -41,6 +44,10 @@ class openpose_node{
         image_transport::Publisher publish_result;
         ros::Publisher publish_pose, publish_bbox;
         //ros::ServiceServer pose_srv;
+        // Dynamic Reconfigure //
+        dynamic_reconfigure::Server<openpose_ros_node_cfg::openpose_rosConfig> server; 
+        dynamic_reconfigure::Server<openpose_ros_node_cfg::openpose_rosConfig>::CallbackType f; 
+        void callback_reconf(openpose_ros_node_cfg::openpose_rosConfig  &config, uint32_t);
 
         //---OpenPose Vars---//
         op::Point<int> outputSize, netInputSize, netOutputSize;

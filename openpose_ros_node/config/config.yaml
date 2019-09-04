@@ -10,6 +10,7 @@ flag_net_resolution: "-1x368"    # Multiples of 16. If it is increased, the accu
                               # any of the dimensions, OP will choose the optimal aspect ratio depending on the user's
                               # input value. E.g. the default `-1x368` is equivalent to `656x368` in 16:9 resolutions,
                               # e.g. full HD (1980x1080) and HD (1280x720) resolutions.
+                              # for more fps AND LOWER ACCURACY use: "320x176"
 falg_face: false             # Enables face keypoint detection. It will share some parameters from the body pose, e.g. model folder
 flag_logging_level: 3        # Current OpenPose library messages are in the range 0-4: 1 for
                               # low priority messages and 4 for important ones, = will output any log message
@@ -28,6 +29,6 @@ scale_number: 1              # Number of scales to average
 scale_gap: 0.3               # Scale gap between scales. No effect unless num_scales>1. Initial scale is always 1. If you
                                     # want to change the initial scale, you actually want to multiply the `net_resolution` by
                                     # your desired initial scale.
-no_display: false            # Do not open a display window (Do not publish output picture)
-show_skeleton: true           # Flag that decides wether to publish output image or not
-pub_bbox: true                # Flag that decides wether to publish the Bounding Box image
+no_display: false            # Do not open a display window 
+#show_skeleton: true           # Flag that decides wether to publish output image or not
+#pub_bbox: true                # Flag that decides wether to publish the Bounding Box image
